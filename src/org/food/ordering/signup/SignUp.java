@@ -23,9 +23,9 @@ public class SignUp {
         this.email = email;
     }
 
-	public boolean isEmailValid() {
+    public boolean isEmailValid() {
         return EmailAddressValidator.isValid(email, of(EmailAddressCriteria.ALLOW_QUOTED_IDENTIFIERS));
-	}
+    }
 
     public String sendConfirmationEmail() {
         if (!isEmailValid()) {
@@ -51,8 +51,8 @@ public class SignUp {
                 .build();
     }
 
-	private static void sendConfirmationEmail(String messageCode, String newUserEmail) {
-	    Email email = constructEmailMessage(messageCode, newUserEmail);
-	    new Mailer(null, null, null, System.getenv("EMAIL_PASSWORD")).sendMail(email);
-	}
+    private static void sendConfirmationEmail(String messageCode, String newUserEmail) {
+        Email email = constructEmailMessage(messageCode, newUserEmail);
+        new Mailer(null, null, null, System.getenv("EMAIL_PASSWORD")).sendMail(email);
+    }
 }
