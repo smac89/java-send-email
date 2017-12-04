@@ -6,9 +6,7 @@ import org.simplejavamail.email.EmailBuilder;
 import org.simplejavamail.mailer.Mailer;
 
 import java.util.UUID;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.logging.Logger;
 
 public class SignUp {
@@ -21,7 +19,7 @@ public class SignUp {
         this.email = email;
     }
 
-    public boolean isEmailValid() {
+	public boolean isEmailValid() {
         return EmailAddressValidator.isValid(email);
     }
 
@@ -33,28 +31,38 @@ public class SignUp {
                 .build();
     }
 
-    public String sendConfirmationEmailWait() {
-        if (!isEmailValid()) {
-            throw new IllegalArgumentException("Invalid email address supplied!");
-        }
-        return sendConfirmationEmail().join();
-    }
-
-    public CompletableFuture<String> sendConfirmationEmail() {
+    public String sendConfirmationEmail() {
         if (!isEmailValid()) {
             throw new IllegalArgumentException("Invalid email address supplied!");
         }
         final String confirmationCode = UUID.randomUUID().toString();
-        return CompletableFuture.supplyAsync(() -> {
-            Logger.getAnonymousLogger().info("Email about to be sent");
-            sendConfirmationEmail(confirmationCode, email);
-            Logger.getAnonymousLogger().info("Email has been sent to " + email);
-            return confirmationCode;
-        }, EXECUTOR_SERVICE);
+        EXECUTOR_SERVICE.submit(new Runnable() {
+            @Override
+            public void run() {
+                sendConfirmationEmail(confirmationCode, email);
+            }
+        });
+        return confirmationCode;
+	}
+
+    public void sendConfirmationEmail(final EmailCallback callBack) {
+        if (!isEmailValid()) {
+            throw new IllegalArgumentException("Invalid email address supplied!");
+        }
+        EXECUTOR_SERVICE.submit(new Runnable() {
+            @Override
+            public void run() {
+                final String confirmationCode = UUID.randomUUID().toString();
+                sendConfirmationEmail(confirmationCode, email);
+                callBack.emailSent(confirmationCode);
+            }
+        });
     }
 
-    private static void sendConfirmationEmail(String messageCode, String newUserEmail) {
-        Email email = constructEmailMessage(messageCode, newUserEmail);
-        new Mailer(null, null, null, System.getenv("EMAIL_PASSWORD")).sendMail(email);
-    }
+	private static void sendConfirmationEmail(String messageCode, String email) {
+        Logger.getAnonymousLogger().info("Email about to be sent");
+	    Email emailMessage = constructEmailMessage(messageCode, email);
+	    new Mailer(null, null, null, System.getenv("EMAIL_PASSWORD")).sendMail(emailMessage);
+        Logger.getAnonymousLogger().info("Email has been sent to " + email);
+	}
 }

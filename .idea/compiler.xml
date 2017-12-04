@@ -4,8 +4,8 @@
     <bytecodeTargetLevel>
       <module name="email_main" target="1.7" />
       <module name="email_test" target="1.7" />
-      <module name="send-email_main" target="1.8" />
-      <module name="send-email_test" target="1.8" />
+      <module name="send-email_main" target="1.7" />
+      <module name="send-email_test" target="1.7" />
     </bytecodeTargetLevel>
   </component>
 </project>
