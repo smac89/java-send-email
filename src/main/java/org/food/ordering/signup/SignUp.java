@@ -6,7 +6,8 @@ import org.simplejavamail.email.EmailBuilder;
 import org.simplejavamail.mailer.Mailer;
 
 import java.util.UUID;
-import java.util.concurrent.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
 public class SignUp {
@@ -19,16 +20,23 @@ public class SignUp {
         this.email = email;
     }
 
-	public boolean isEmailValid() {
-        return EmailAddressValidator.isValid(email);
-    }
-
     private static Email constructEmailMessage(String messageCode, String newUserEmail) {
         return new EmailBuilder()
                 .to(newUserEmail)
                 .text(String.format(EMAIL_CONFIRMATION_TEMPLATE, messageCode))
                 .addHeader("X-Priority", 5)
                 .build();
+    }
+
+    private static void sendConfirmationEmail(String messageCode, String email) {
+        Logger.getAnonymousLogger().info("Email about to be sent");
+        Email emailMessage = constructEmailMessage(messageCode, email);
+        new Mailer(null, null, null, System.getenv("EMAIL_PASSWORD")).sendMail(emailMessage);
+        Logger.getAnonymousLogger().info("Email has been sent to " + email);
+    }
+
+    public boolean isEmailValid() {
+        return EmailAddressValidator.isValid(email);
     }
 
     public String sendConfirmationEmail() {
@@ -43,7 +51,7 @@ public class SignUp {
             }
         });
         return confirmationCode;
-	}
+    }
 
     public void sendConfirmationEmail(final EmailCallback callBack) {
         if (!isEmailValid()) {
@@ -58,11 +66,4 @@ public class SignUp {
             }
         });
     }
-
-	private static void sendConfirmationEmail(String messageCode, String email) {
-        Logger.getAnonymousLogger().info("Email about to be sent");
-	    Email emailMessage = constructEmailMessage(messageCode, email);
-	    new Mailer(null, null, null, System.getenv("EMAIL_PASSWORD")).sendMail(emailMessage);
-        Logger.getAnonymousLogger().info("Email has been sent to " + email);
-	}
 }
